@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ワクミラベース 閉店チェック表</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Maru+Gothic:wght@700&display=swap">
+<style>
+@page { size: A4 landscape; margin: 10mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Zen Kaku Gothic New", "Noto Sans JP", sans-serif; color: #111; }
+header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4mm; }
+h1 { font-family: "Zen Maru Gothic", sans-serif; font-size: 20pt; margin: 0; }
+.sub { font-size: 10pt; color: #444; }
+.month { font-size: 12pt; }
+.month span { display: inline-block; width: 22mm; border-bottom: 1px solid #111; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th, td { border: 1px solid #111; font-size: 10pt; }
+th.item { width: 62mm; text-align: left; padding: 1.5mm 2.5mm; font-weight: 700; }
+th.item small { display: block; font-weight: 400; font-size: 8pt; color: #444; }
+td { height: 14.5mm; }
+thead th { height: 9mm; font-size: 8pt; color: #444; font-weight: 400; }
+tr.group th { background: #e8e8e8; font-size: 9pt; text-align: left; padding: 1mm 2.5mm; height: auto; }
+tr.key th.item { border-left: 3px solid #111; }
+tr.sign td, tr.sign th { height: 17mm; }
+.foot { margin-top: 3mm; font-size: 9pt; color: #444; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>ワクミラベース 閉店チェック表</h1>
+    <div class="sub">帰る前に上から順に確認して ✓ を記入。最後の人が名前を書く。</div>
+  </div>
+  <div class="month"><span></span> 年 <span style="width:14mm"></span> 月</div>
+</header>
+
+<table>
+  <thead>
+    <tr><th class="item" style="font-size:9pt">日付 →</th>
+      <th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+      <th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+  </thead>
+  <tbody id="body"></tbody>
+</table>
+
+<div class="foot">
+  <span>※ 1枚で14日分。日付欄に日にちを書いて使ってください。</span>
+  <span>扉はドアノブを引いて開かないことまで確認</span>
+</div>
+
+<script>
+const rows = [
+  ["g", "電源"],
+  ["i", "空気清浄機 OFF", "ランプが消えているか"],
+  ["i", "プリンター OFF", "ランプが消えているか"],
+  ["i", "エアコン OFF"],
+  ["i", "照明 すべて消灯"],
+  ["g", "戸締まり"],
+  ["k", "窓 施錠"],
+  ["k", "扉 施錠", "ドアノブを引いて確認"],
+  ["s", "退出時刻"],
+  ["s", "確認者（名前）"]
+];
+const cells = "<td></td>".repeat(14);
+document.getElementById("body").innerHTML = rows.map(([type, t, s]) =>
+  type === "g"
+    ? `<tr class="group"><th colspan="15">${t}</th></tr>`
+    : `<tr class="${type === "k" ? "key" : type === "s" ? "sign" : ""}"><th class="item">${t}${s ? `<small>${s}</small>` : ""}</th>${cells}</tr>`
+).join("");
+</script>
+</body>
+</html>
