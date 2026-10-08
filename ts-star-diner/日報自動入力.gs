@@ -8,6 +8,7 @@
  *   D5:D18 … 時間帯別 客数
  *   F5:F18 … 時間帯別 売上（funfo の 売上合計 − 割引額 ＝ 純売上）
  *   O18:O20 … 組数（〜15時 / 17〜23時 / 24時〜L）
+ *   H21     … 組数（その日の合計。組数累計の計算に使われる）
  * それ以外のセル（使用人時・仕入・光熱・コメント等）には触れない。
  *
  * 時間帯の扱い（営業日 D）:
@@ -118,6 +119,7 @@ function writeNippo_(dateStr) {
   sheet.getRange('D5:D18').setValues(guests);
   sheet.getRange('F5:F18').setValues(sales);
   sheet.getRange('O18:O20').setValues([[g(5, 8)], [g(9, 14)], [g(15, 18)]]);
+  sheet.getRange('H21').setValue(totalGroups);
 
   return dateStr + ': 日報「' + fileName + '」シート' + date.getDate() + ' に入力 / 売上¥' + totalSales +
     ' / 客数' + totalGuests + ' / ' + totalGroups + '組';
