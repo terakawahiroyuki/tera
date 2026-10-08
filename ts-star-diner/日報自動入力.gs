@@ -16,7 +16,7 @@
  *   24〜1時 / 1〜2時 / 2〜3時の行 … 翌日 00:00〜02:59
  *
  * 使い方:
- *   1. setupNippoTrigger() を1回実行 → 毎朝7時台に前日分を日報へ自動入力
+ *   1. setupNippoTrigger() を1回実行 → 毎晩22時台（閉店後）にその日の分を日報へ自動入力
  *   2. 手動で入れたいときはメニュー「日報自動入力」から
  */
 
@@ -42,28 +42,33 @@ var NIPPO_BANDS = [
 
 // ---------------- エントリーポイント ----------------
 
-/** トリガー用: 前日分を日報に入力 */
+/** トリガー用: 今日の分を日報に入力（閉店後の22時台に実行） */
 function fetchNippoJob() {
-  Logger.log(writeNippo_(dateStr_(-1)));
+  Logger.log(writeNippo_(dateStr_(0)));
 }
 
-/** 毎朝7時台のトリガーと、メニュー表示用トリガーを設定（既存の同名トリガーは張り替え） */
+/** 毎晩22時台のトリガーと、メニュー表示用トリガーを設定（既存の同名トリガーは張り替え） */
 function setupNippoTrigger() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
     var h = t.getHandlerFunction();
     if (h === 'fetchNippoJob' || h === 'addNippoMenu') ScriptApp.deleteTrigger(t);
   });
-  ScriptApp.newTrigger('fetchNippoJob').timeBased().everyDays(1).atHour(7).create();
+  ScriptApp.newTrigger('fetchNippoJob').timeBased().everyDays(1).atHour(22).create();
   ScriptApp.newTrigger('addNippoMenu').forSpreadsheet(SPREADSHEET_ID).onOpen().create();
-  Logger.log('毎日7時台に前日分を日報へ入力するトリガーを設定しました');
+  Logger.log('毎日22時台にその日の分を日報へ入力するトリガーを設定しました');
 }
 
 /** 経営データ基盤を開いたときにメニューを追加（既存の onOpen とは別に動く） */
 function addNippoMenu() {
   SpreadsheetApp.getUi().createMenu('日報自動入力')
+    .addItem('今日の分を日報に入力', 'menuNippoToday')
     .addItem('前日分を日報に入力', 'menuNippoYesterday')
     .addItem('日付を指定して日報に入力', 'menuNippoOneDay')
     .addToUi();
+}
+
+function menuNippoToday() {
+  SpreadsheetApp.getUi().alert(writeNippo_(dateStr_(0)));
 }
 
 function menuNippoYesterday() {
@@ -90,11 +95,14 @@ function writeNippo_(dateStr) {
 
   var token = auth_();
   var nextStr = Utilities.formatDate(new Date(date.getTime() + 86400000), TZ, 'yyyy-MM-dd');
+  var todayStr = dateStr_(0);
   var guests = [], sales = [], groups = {};
   var totalSales = 0, totalGuests = 0, totalGroups = 0;
 
   NIPPO_BANDS.forEach(function (b) {
-    var r = fetchBand_(token, b.dayOffset ? nextStr : dateStr, b.from, b.to);
+    var target = b.dayOffset ? nextStr : dateStr;
+    // まだ来ていない日（22時台に当日分を入れるときの深夜帯）は 0 のまま
+    var r = target > todayStr ? { guests: 0, sales: 0, groups: 0 } : fetchBand_(token, target, b.from, b.to);
     guests.push([r.guests]);
     sales.push([r.sales]);
     groups[b.row] = r.groups;
